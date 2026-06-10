@@ -1,3 +1,7 @@
+> [!CAUTION]
+> **Project Status: Unpublished / Under Development**  
+> This open-source programming language is currently in development. The code and documentation are not yet published, stable, or ready for production use.
+
 # 🍇 Acai Programming Language
 
 **Acai** is a lightweight, human-friendly hybrid programming language with easy and different syntax styles.

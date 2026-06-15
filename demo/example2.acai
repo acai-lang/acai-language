@@ -1,0 +1,15 @@
+make function greet (person, times) then
+    set i = 1
+    repeat while i <= times
+        show "[example2] Hello, {person}!"
+        set i = i + 1
+    end
+    return "greeted {person} {times} times"
+end
+
+make class Person (name, age) then
+    set self.name to name
+    set self.age to age
+    show "[example2] Created Person {name} aged {age}"
+    return self
+end

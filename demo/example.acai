@@ -1,0 +1,24 @@
+use "example2.acai"
+
+set name to call input("Enter your name: ")
+show "Hello {name}!"
+
+show r"Raw example: {name} will not be interpolated here."
+
+show "Calling greet from example2:"
+call greet(name, 2)
+
+set person to call Person(name, 30)
+show "Created person instance (see internal debug above)."
+
+set color to call input("What's your favorite color? ")
+show "You said: {color}"
+
+set x to 5
+if x < 3 then
+    show "x is less than 3"
+else if x == 5 then
+    show "x equals five (else if triggered)"
+else
+    show "x is something else"
+end

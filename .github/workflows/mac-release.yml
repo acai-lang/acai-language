@@ -1,0 +1,47 @@
+name: Build Acai macOS Installer
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Compile Acai Mac Binary
+      run: |
+        dotnet publish -c Release -r osx-arm64 --self-contained true /p:PublishSingleFile=true -o ./dist/mac
+
+    - name: Structure Installer Files
+      run: |
+        mkdir -p ./pkg-root/usr/local/bin
+        mkdir -p ./pkg-root/usr/local/share/Acai/lib
+        mkdir -p ./pkg-root/usr/local/share/Acai/docs
+        mkdir -p ./pkg-root/usr/local/share/Acai/demo
+        mkdir -p ./pkg-root/usr/local/share/Acai/src
+        
+        cp ./dist/mac/Acai ./pkg-root/usr/local/bin/
+        cp -r ./lib/* ./pkg-root/usr/local/share/Acai/lib/
+        cp -r ./docs/* ./pkg-root/usr/local/share/Acai/docs/
+        cp -r ./demo/* ./pkg-root/usr/local/share/Acai/demo/
+        cp -r ./src/* ./pkg-root/usr/local/share/Acai/src/
+
+
+    - name: Build Native Mac .pkg Wizard
+      run: |
+        pkgbuild --root ./pkg-root --identifier com.acaiopensource.acai --version 0.1.0 Acai-mac-arm64.pkg
+
+    - name: Upload to GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: Acai-mac-arm64.pkg
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -57,8 +57,9 @@ jobs:
         pkgbuild --root ./pkg-root \
                  --identifier com.acaiopensource.acai \
                  --version "${{ steps.get_version.outputs.version }}" \
-                 --own root \
+                 --ownership recommended \
                  Acai-mac-arm64.pkg
+
 
     - name: Upload Mac PKG to Release
       uses: softprops/action-gh-release@v2

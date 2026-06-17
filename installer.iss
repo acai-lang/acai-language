@@ -4,23 +4,30 @@ AppVersion=0.1.0
 AppPublisher=Acai Open Source
 DefaultDirName={autopf}\Acai
 DefaultGroupName=Acai 0.1
-OutputBaseFilename=Acai_Stable0.1.0_Setup
+OutputBaseFilename=Acai-windows-x64
 Compression=lzma
 SolidCompression=yes
 ChangesEnvironment=yes
+LicenseFile="LICENSE"
 
+ArchitecturesInstallIn64BitMode=x64compatible
 SetupIconFile=acai.ico
 UninstallDisplayIcon={app}\acai.ico
+UninstallDisplayName=Acai
+UninstallIconFile=acai.ico
+AppCopyright=Copyright © 2026 Acai Open Source
 
 [Files]
 ; 1. Grab the executable directly from your .NET build output folder
-Source: "bin\Release\net10.0\win-x64\Acai.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "bin\Release\net10.0\win-x64\publish\Acai.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "bin\Release\net10.0\win-x64\publish\Acai.pdb"; DestDir: "{app}"; Flags: ignoreversion
 
 ; 2. Grab your docs, demos, and libs directly from your root project folders
+Source: "README.md"; DestDir: "{app}"; Flags: isreadme
+Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "acai.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "docs\*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "demo\*"; DestDir: "{app}\demo"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "lib\*"; DestDir: "{app}\lib"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "src\*"; DestDir: "{app}\src"; Flags: ignoreversion recursesubdirs createallsubdirs
 [Registry]
 ; This block automatically adds your Program Files folder to the system PATH variable

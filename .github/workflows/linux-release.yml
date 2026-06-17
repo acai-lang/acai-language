@@ -1,0 +1,68 @@
+name: Build Acai Linux Installer
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: # Allows manual testing from your Windows browser
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest  # Runs on a standard Linux x64 cloud runner
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Compile Standalone Linux x64 Binary
+      run: |
+        dotnet publish -c Release \
+                       -r linux-x64 \
+                       --self-contained true \
+                       -p:PublishSingleFile=true \
+                       -p:IncludeNativeLibrariesForSelfExtract=true \
+                       -o ./dist/linux
+
+    - name: Structure Distribution Directory
+      run: |
+        # 1. Create a clean staging folder
+        mkdir -p acai-linux-x64
+        
+        # 2. Copy the compiled extensionless Linux binary and make it runnable
+        cp ./dist/linux/Acai ./acai-linux-x64/acai
+        chmod +x ./acai-linux-x64/acai
+        
+        # 3. Copy top-level metadata files if they exist in your root
+        [ -f "README.md" ] && cp README.md ./acai-linux-x64/ || echo "No README.md found"
+        [ -f "LICENSE" ]   && cp LICENSE ./acai-linux-x64/   || echo "No LICENSE found"
+        
+        # 4. Copy required directories recursively if they exist and are not empty
+        [ -d "./demo" ] && [ "$(ls -A ./demo)" ] && cp -r ./demo ./acai-linux-x64/ || echo "No demo folder"
+        [ -d "./src" ]  && [ "$(ls -A ./src)" ]  && cp -r ./src  ./acai-linux-x64/ || echo "No src folder"
+        [ -d "./docs" ] && [ "$(ls -A ./docs)" ] && cp -r ./docs ./acai-linux-x64/ || echo "No docs folder"
+
+    - name: Compress into Linux Tarball (.tar.gz)
+      run: |
+        # Compress the folder structure into a distribution archive
+        tar -czvf acai-linux-x64.tar.gz acai-linux-x64/
+
+    - name: Determine Version Tag
+      id: get_version
+      run: |
+        TAG="${{ github.event.release.tag_name }}"
+        if [ -z "$TAG" ]; then TAG="v0.1.0"; fi
+        echo "version=$TAG" >> $GITHUB_OUTPUT
+
+    - name: Upload Linux Tarball to Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: acai-linux-x64.tar.gz
+        tag_name: ${{ steps.get_version.outputs.version }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

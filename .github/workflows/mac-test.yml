@@ -1,0 +1,60 @@
+name: Test Live macOS Release Asset
+
+on: [workflow_dispatch] # Runs only when you click the manual button
+
+jobs:
+  test-live-mac:
+    runs-on: macos-latest
+    steps:
+    - name: Download Mac Asset From Latest Release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "=== Downloading live .pkg asset from release ==="
+        gh release download --pattern "Acai-mac-arm64.pkg" --clobber
+
+    - name: Inspect Package Internals (Will crash if files are missing)
+      run: |
+        echo "=== Expanding downloaded installer payload ==="
+        pkgutil --expand-full Acai-mac-arm64.pkg ./expanded-live-inspection
+        
+        echo "Checking application files..."
+        ls -la ./expanded-live-inspection/Payload/usr/local/bin/Acai
+        ls -la ./expanded-live-inspection/Payload/usr/local/bin/Acai/LICENSE
+        ls -la ./expanded-live-inspection/Payload/usr/local/share/Acai/README.md
+        ls -la ./expanded-live-inspection/Payload/usr/local/share/Acai/demo
+        ls -la ./expanded-live-inspection/Payload/usr/local/share/Acai/src
+        ls -la ./expanded-live-inspection/Payload/usr/local/share/Acai/docs
+
+    - name: Execute Live Binary Command Tests
+      run: |
+        # Navigate to where the binary executable is hiding inside the unpacked payload layout
+        cd ./expanded-live-inspection/Payload/usr/local/bin
+        
+        # Ensure it has execute permissions inside our test runner environment
+        chmod +x Acai
+
+        # 1. TEST: Verify help command works
+        echo "=== Testing 'Acai help' command ==="
+        ./Acai help || ./Acai --help
+
+        # 2. TEST: Create a test script file
+        echo "=== Creating 'check.acai' test script ==="
+        echo 'show "Hello World"' > check.acai
+        cat check.acai
+
+        # 3. TEST: Run the script file and capture output
+        echo "=== Executing 'Acai check.acai' ==="
+        OUTPUT=$(./Acai check.acai)
+        echo "Program Output: $OUTPUT"
+
+        # 4. TEST: Strict Validation check
+        # This will instantly fail the GitHub action build if 'Hello World' isn't printed
+        if echo "$OUTPUT" | grep -q "Hello World"; then
+          echo "SUCCESS: 'Hello World' was successfully printed by the Acai macOS engine!"
+        else
+          echo "ERROR: The program output did not contain 'Hello World'."
+          exit 1
+        fi
+
+        echo "SUCCESS: All macOS CLI command tests passed perfectly!"

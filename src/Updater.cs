@@ -4,13 +4,14 @@ using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
+using System.Net.Http.Headers;
 
 namespace Acai.src;
 
 class Updater
 {
     // CRITICAL: Change these to your actual GitHub Organization and Repository!
-    private const string GitHubOwner = "acai-lang"; 
+    private const string GitHubOwner = "/acai-lang"; 
     private const string GitHubRepo = "acai-language";
 
     public static void Execute(string channel)
@@ -19,7 +20,9 @@ class Updater
         
         // Fix 1: Add required API headers explicitly
         client.DefaultRequestHeaders.UserAgent.ParseAdd("AcaiLangCompilerUpdater");
-        client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+	client.DefaultRequestHeaders.Accept.Clear();
+	// Replace the previous media type line with this broad wildcard
+	client.DefaultRequestHeaders.Accept.ParseAdd("*/*");
 
                 var currentVersion = typeof(Program).Assembly.GetName().Version;
         string currentVersionStr = currentVersion != null 

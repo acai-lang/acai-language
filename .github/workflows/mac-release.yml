@@ -5,6 +5,9 @@ on:
     types: [published]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-mac:
     runs-on: macos-latest
@@ -32,6 +35,14 @@ jobs:
         cp -r ./docs/* ./pkg-root/usr/local/share/Acai/docs/
         cp -r ./demo/* ./pkg-root/usr/local/share/Acai/demo/
         cp -r ./src/* ./pkg-root/usr/local/share/Acai/src/
+        
+    - name: Determine Version Tag
+      id: get_version
+      run: |
+        # If running from a formal release, use that tag. If clicked manually, use a default fallback.
+        TAG="${{ github.event.release.tag_name }}"
+        if [ -z "$TAG" ]; then TAG="v0.1.0"; fi
+        echo "version=$TAG" >> $GITHUB_OUTPUT
 
 
     - name: Build Native Mac .pkg Wizard
@@ -42,6 +53,6 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: Acai-mac-arm64.pkg
-        tag_name: ${{ github.event.release.tag_name }}
+        tag_name: ${{ steps.get_version.outputs.version }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

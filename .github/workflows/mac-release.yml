@@ -3,6 +3,7 @@ name: Build Acai macOS Installer
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   build-mac:
@@ -23,13 +24,11 @@ jobs:
     - name: Structure Installer Files
       run: |
         mkdir -p ./pkg-root/usr/local/bin
-        mkdir -p ./pkg-root/usr/local/share/Acai/lib
         mkdir -p ./pkg-root/usr/local/share/Acai/docs
         mkdir -p ./pkg-root/usr/local/share/Acai/demo
         mkdir -p ./pkg-root/usr/local/share/Acai/src
         
         cp ./dist/mac/Acai ./pkg-root/usr/local/bin/
-        cp -r ./lib/* ./pkg-root/usr/local/share/Acai/lib/
         cp -r ./docs/* ./pkg-root/usr/local/share/Acai/docs/
         cp -r ./demo/* ./pkg-root/usr/local/share/Acai/demo/
         cp -r ./src/* ./pkg-root/usr/local/share/Acai/src/
@@ -43,5 +42,6 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: Acai-mac-arm64.pkg
+        tag_name: ${{ github.event.release.tag_name }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

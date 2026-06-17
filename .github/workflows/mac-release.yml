@@ -26,30 +26,41 @@ jobs:
 
     - name: Structure Installer Files
       run: |
+        # 1. Create full system target directory structures
         mkdir -p ./pkg-root/usr/local/bin
         mkdir -p ./pkg-root/usr/local/share/Acai/docs
         mkdir -p ./pkg-root/usr/local/share/Acai/demo
         mkdir -p ./pkg-root/usr/local/share/Acai/src
         
+        # 2. Copy the main executable and make it runnable
         cp ./dist/mac/Acai ./pkg-root/usr/local/bin/
-        cp -r ./docs/* ./pkg-root/usr/local/share/Acai/docs/
-        cp -r ./demo/* ./pkg-root/usr/local/share/Acai/demo/
-        cp -r ./src/* ./pkg-root/usr/local/share/Acai/src/
+        chmod +x ./pkg-root/usr/local/bin/Acai
         
+        # 3. Copy top-level metadata files into the shared asset path
+        [ -f "README.md" ] && cp README.md ./pkg-root/usr/local/share/Acai/ || echo "No README.md"
+        [ -f "LICENSE" ]   && cp LICENSE ./pkg-root/usr/local/share/Acai/   || echo "No LICENSE"
+        
+        # 4. Safely copy asset folders recursively if they exist and are not empty
+        [ -d "./docs" ] && [ "$(ls -A ./docs)" ] && cp -r ./docs/* ./pkg-root/usr/local/share/Acai/docs/ || echo "No docs files"
+        [ -d "./demo" ] && [ "$(ls -A ./demo)" ] && cp -r ./demo/* ./pkg-root/usr/local/share/Acai/demo/ || echo "No demo files"
+        [ -d "./src" ]  && [ "$(ls -A ./src)" ]  && cp -r ./src/* ./pkg-root/usr/local/share/Acai/src/   || echo "No src files"
+
     - name: Determine Version Tag
       id: get_version
       run: |
-        # If running from a formal release, use that tag. If clicked manually, use a default fallback.
         TAG="${{ github.event.release.tag_name }}"
         if [ -z "$TAG" ]; then TAG="v0.1.0"; fi
         echo "version=$TAG" >> $GITHUB_OUTPUT
 
-
     - name: Build Native Mac .pkg Wizard
       run: |
-        pkgbuild --root ./pkg-root --identifier com.acaiopensource.acai --version 0.1.0 Acai-mac-arm64.pkg
+        pkgbuild --root ./pkg-root \
+                 --identifier com.acaiopensource.acai \
+                 --version "${{ steps.get_version.outputs.version }}" \
+                 --own root \
+                 Acai-mac-arm64.pkg
 
-    - name: Upload to GitHub Release
+    - name: Upload Mac PKG to Release
       uses: softprops/action-gh-release@v2
       with:
         files: Acai-mac-arm64.pkg

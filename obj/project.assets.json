@@ -2,6 +2,31 @@
   "version": 3,
   "targets": {
     "net10.0": {
+      "BsDiff/1.1.0": {
+        "type": "package",
+        "dependencies": {
+          "SharpZipLib": "1.4.2"
+        },
+        "compile": {
+          "lib/net8.0/BsDiff.dll": {}
+        },
+        "runtime": {
+          "lib/net8.0/BsDiff.dll": {}
+        }
+      },
+      "SharpZipLib/1.4.2": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/ICSharpCode.SharpZipLib.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/ICSharpCode.SharpZipLib.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
       "System.CommandLine/3.0.0-preview.5.26302.115": {
         "type": "package",
         "compile": {
@@ -62,6 +87,42 @@
     }
   },
   "libraries": {
+    "BsDiff/1.1.0": {
+      "sha512": "0T3ciZ2egabNi55KduF0mlkw68fIlQEtwzfVvRbFkb6o/b0C+WlFI9oz5lpoY84bNYoqlFAq/TXW22DmrObKqw==",
+      "type": "package",
+      "path": "bsdiff/1.1.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "bsdiff.1.1.0.nupkg.sha512",
+        "bsdiff.nuspec",
+        "lib/net6.0/BsDiff.dll",
+        "lib/net8.0/BsDiff.dll",
+        "lib/netstandard2.0/BsDiff.dll"
+      ]
+    },
+    "SharpZipLib/1.4.2": {
+      "sha512": "yjj+3zgz8zgXpiiC3ZdF/iyTBbz2fFvMxZFEBPUcwZjIvXOf37Ylm+K58hqMfIBt5JgU/Z2uoUS67JmTLe973A==",
+      "type": "package",
+      "path": "sharpziplib/1.4.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "images/sharpziplib-nuget-256x256.png",
+        "lib/net6.0/ICSharpCode.SharpZipLib.dll",
+        "lib/net6.0/ICSharpCode.SharpZipLib.pdb",
+        "lib/net6.0/ICSharpCode.SharpZipLib.xml",
+        "lib/netstandard2.0/ICSharpCode.SharpZipLib.dll",
+        "lib/netstandard2.0/ICSharpCode.SharpZipLib.pdb",
+        "lib/netstandard2.0/ICSharpCode.SharpZipLib.xml",
+        "lib/netstandard2.1/ICSharpCode.SharpZipLib.dll",
+        "lib/netstandard2.1/ICSharpCode.SharpZipLib.pdb",
+        "lib/netstandard2.1/ICSharpCode.SharpZipLib.xml",
+        "sharpziplib.1.4.2.nupkg.sha512",
+        "sharpziplib.nuspec"
+      ]
+    },
     "System.CommandLine/3.0.0-preview.5.26302.115": {
       "sha512": "Ltm4aNcEJFVMoOo8G9/Gs27K2VlIIBD7V3x6y8KDt49mL/EohwCgW1qyhnTivBoZievEG7KJYXFaCNm/ru4OqQ==",
       "type": "package",
@@ -111,6 +172,7 @@
   },
   "projectFileDependencyGroups": {
     "net10.0": [
+      "BsDiff >= 1.1.0",
       "System.CommandLine >= 3.0.0-preview.5.26302.115"
     ]
   },
@@ -157,6 +219,10 @@
       "net10.0": {
         "targetAlias": "net10.0",
         "dependencies": {
+          "BsDiff": {
+            "target": "Package",
+            "version": "[1.1.0, )"
+          },
           "System.CommandLine": {
             "target": "Package",
             "version": "[3.0.0-preview.5.26302.115, )"

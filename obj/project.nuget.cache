@@ -1,9 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "GS14x8KJa+U=",
+  "dgSpecHash": "gOvIrSpVPM8=",
   "success": true,
   "projectFilePath": "D:\\Akshar Singh\\Coding\\CustomLanguages\\Acai\\Acai.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\aksha\\.nuget\\packages\\bsdiff\\1.1.0\\bsdiff.1.1.0.nupkg.sha512",
+    "C:\\Users\\aksha\\.nuget\\packages\\sharpziplib\\1.4.2\\sharpziplib.1.4.2.nupkg.sha512",
     "C:\\Users\\aksha\\.nuget\\packages\\system.commandline\\3.0.0-preview.5.26302.115\\system.commandline.3.0.0-preview.5.26302.115.nupkg.sha512"
   ],
   "logs": []

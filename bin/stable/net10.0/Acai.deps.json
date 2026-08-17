@@ -1,0 +1,116 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "Acai/0.1.0": {
+        "dependencies": {
+          "BsDiff": "1.1.0",
+          "System.CommandLine": "3.0.0-preview.5.26302.115"
+        },
+        "runtime": {
+          "Acai.dll": {}
+        }
+      },
+      "BsDiff/1.1.0": {
+        "dependencies": {
+          "SharpZipLib": "1.4.2"
+        },
+        "runtime": {
+          "lib/net8.0/BsDiff.dll": {
+            "assemblyVersion": "1.1.0.38",
+            "fileVersion": "1.1.0.38"
+          }
+        }
+      },
+      "SharpZipLib/1.4.2": {
+        "runtime": {
+          "lib/net6.0/ICSharpCode.SharpZipLib.dll": {
+            "assemblyVersion": "1.4.2.13",
+            "fileVersion": "1.4.2.13"
+          }
+        }
+      },
+      "System.CommandLine/3.0.0-preview.5.26302.115": {
+        "runtime": {
+          "lib/net10.0/System.CommandLine.dll": {
+            "assemblyVersion": "3.0.0.0",
+            "fileVersion": "3.0.26.30315"
+          }
+        },
+        "resources": {
+          "lib/net10.0/cs/System.CommandLine.resources.dll": {
+            "locale": "cs"
+          },
+          "lib/net10.0/de/System.CommandLine.resources.dll": {
+            "locale": "de"
+          },
+          "lib/net10.0/es/System.CommandLine.resources.dll": {
+            "locale": "es"
+          },
+          "lib/net10.0/fr/System.CommandLine.resources.dll": {
+            "locale": "fr"
+          },
+          "lib/net10.0/it/System.CommandLine.resources.dll": {
+            "locale": "it"
+          },
+          "lib/net10.0/ja/System.CommandLine.resources.dll": {
+            "locale": "ja"
+          },
+          "lib/net10.0/ko/System.CommandLine.resources.dll": {
+            "locale": "ko"
+          },
+          "lib/net10.0/pl/System.CommandLine.resources.dll": {
+            "locale": "pl"
+          },
+          "lib/net10.0/pt-BR/System.CommandLine.resources.dll": {
+            "locale": "pt-BR"
+          },
+          "lib/net10.0/ru/System.CommandLine.resources.dll": {
+            "locale": "ru"
+          },
+          "lib/net10.0/tr/System.CommandLine.resources.dll": {
+            "locale": "tr"
+          },
+          "lib/net10.0/zh-Hans/System.CommandLine.resources.dll": {
+            "locale": "zh-Hans"
+          },
+          "lib/net10.0/zh-Hant/System.CommandLine.resources.dll": {
+            "locale": "zh-Hant"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Acai/0.1.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "BsDiff/1.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-0T3ciZ2egabNi55KduF0mlkw68fIlQEtwzfVvRbFkb6o/b0C+WlFI9oz5lpoY84bNYoqlFAq/TXW22DmrObKqw==",
+      "path": "bsdiff/1.1.0",
+      "hashPath": "bsdiff.1.1.0.nupkg.sha512"
+    },
+    "SharpZipLib/1.4.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-yjj+3zgz8zgXpiiC3ZdF/iyTBbz2fFvMxZFEBPUcwZjIvXOf37Ylm+K58hqMfIBt5JgU/Z2uoUS67JmTLe973A==",
+      "path": "sharpziplib/1.4.2",
+      "hashPath": "sharpziplib.1.4.2.nupkg.sha512"
+    },
+    "System.CommandLine/3.0.0-preview.5.26302.115": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Ltm4aNcEJFVMoOo8G9/Gs27K2VlIIBD7V3x6y8KDt49mL/EohwCgW1qyhnTivBoZievEG7KJYXFaCNm/ru4OqQ==",
+      "path": "system.commandline/3.0.0-preview.5.26302.115",
+      "hashPath": "system.commandline.3.0.0-preview.5.26302.115.nupkg.sha512"
+    }
+  }
+}

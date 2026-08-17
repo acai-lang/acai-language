@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCopyrightAttribute("Copyright © 2026 Acai Open Source")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("A programming language for everyone.")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("0.1.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.1.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.1.0+86f19d4574e0d9cac3d4966edc35862a4fb3e31c")]
 [assembly: System.Reflection.AssemblyProductAttribute("Acai")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Acai")]
 [assembly: System.Reflection.AssemblyVersionAttribute("0.1.0")]

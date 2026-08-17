@@ -29,7 +29,7 @@ Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "acai.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "docs\*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "demo\*"; DestDir: "{app}\demo"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "src\*"; DestDir: "{app}\src"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "metadata\*"; DestDir: "{app}\metadata"; Flags: ignoreversion recursesubdirs createallsubdirs
 [Registry]
 ; This block automatically adds your Program Files folder to the system PATH variable
 Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Check: NeedsAddPath

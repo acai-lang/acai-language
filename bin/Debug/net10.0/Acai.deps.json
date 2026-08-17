@@ -8,10 +8,30 @@
     ".NETCoreApp,Version=v10.0": {
       "Acai/0.1.0": {
         "dependencies": {
+          "BsDiff": "1.1.0",
           "System.CommandLine": "3.0.0-preview.5.26302.115"
         },
         "runtime": {
           "Acai.dll": {}
+        }
+      },
+      "BsDiff/1.1.0": {
+        "dependencies": {
+          "SharpZipLib": "1.4.2"
+        },
+        "runtime": {
+          "lib/net8.0/BsDiff.dll": {
+            "assemblyVersion": "1.1.0.38",
+            "fileVersion": "1.1.0.38"
+          }
+        }
+      },
+      "SharpZipLib/1.4.2": {
+        "runtime": {
+          "lib/net6.0/ICSharpCode.SharpZipLib.dll": {
+            "assemblyVersion": "1.4.2.13",
+            "fileVersion": "1.4.2.13"
+          }
         }
       },
       "System.CommandLine/3.0.0-preview.5.26302.115": {
@@ -70,6 +90,20 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "BsDiff/1.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-0T3ciZ2egabNi55KduF0mlkw68fIlQEtwzfVvRbFkb6o/b0C+WlFI9oz5lpoY84bNYoqlFAq/TXW22DmrObKqw==",
+      "path": "bsdiff/1.1.0",
+      "hashPath": "bsdiff.1.1.0.nupkg.sha512"
+    },
+    "SharpZipLib/1.4.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-yjj+3zgz8zgXpiiC3ZdF/iyTBbz2fFvMxZFEBPUcwZjIvXOf37Ylm+K58hqMfIBt5JgU/Z2uoUS67JmTLe973A==",
+      "path": "sharpziplib/1.4.2",
+      "hashPath": "sharpziplib.1.4.2.nupkg.sha512"
     },
     "System.CommandLine/3.0.0-preview.5.26302.115": {
       "type": "package",

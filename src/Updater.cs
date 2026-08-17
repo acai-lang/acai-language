@@ -7,12 +7,14 @@ using System.Net.Http.Json;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Acai.src
 {
     class Updater
     {
-        private const string CurrentVersion = "1.0.0"; // Your language's current version
+        // Local version is read from metadata/VERSION at runtime. If not found, a fallback of "0.0.0" is used.
         private const string GitHubApiUrl = "https://api.github.com";
 
         /// <summary>
@@ -21,15 +23,16 @@ namespace Acai.src
         /// </summary>
         public static async Task ExecuteUpgradeAsync(string channel = "release")
         {
+            // determine current local version from metadata/VERSION (no hardcoded defaults)
+            string currentVersion = ReadLocalVersion();
             // 1. Save the operating system name in a local variable
             string osName = GetTargetOsName();
             string architecture = RuntimeInformation.OSArchitecture.ToString().ToLowerInvariant();
 
             Console.WriteLine($"[Acai] Running on OS: {osName} ({architecture})");
 
-            // 2. Setup the local target folder path: ./Acai/update
-            string baseDirectory = AppContext.BaseDirectory;
-            string updateFolder = Path.Combine(baseDirectory, "Acai", "update");
+            // 2. Setup the user-local target folder path (per-OS)
+            string updateFolder = GetUserUpdateFolder();
             if (!Directory.Exists(updateFolder)) Directory.CreateDirectory(updateFolder);
 
             using HttpClient client = new HttpClient();
@@ -64,6 +67,13 @@ namespace Acai.src
             var selected = releases.FirstOrDefault(r => r.Prerelease == pickPrerelease) ?? releases.First();
             var selectedTag = selected.TagName;
             Console.WriteLine($"[Acai] Selected tag: {selectedTag} (prerelease={selected.Prerelease})");
+
+            var selectedVersion = selectedTag.TrimStart('v', 'V');
+            if (string.Equals(selectedVersion, currentVersion, StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine($"[Acai] You are already running the latest version ({currentVersion}).");
+                return;
+            }
 
             // pick file name by platform
             string fileName = osName switch
@@ -117,9 +127,20 @@ namespace Acai.src
                 }
             }
             catch { /* ignore if checksums are unavailable */ }
-
-            // simple deploy: for archive installer we leave it to the user; for windows exe or mac pkg we attempt to place into update folder
-            Console.WriteLine("[Acai] Download complete. Inspect the downloaded file in the update folder to proceed with installation.");
+            // attempt to install the downloaded asset, then clean up the update file
+            Console.WriteLine("[Acai] Download complete. Installing...");
+            try
+            {
+                InstallDownloadedAsset(downloadedAssetPath, osName);
+                // delete the downloaded asset after successful install
+                try { if (File.Exists(downloadedAssetPath)) File.Delete(downloadedAssetPath); } catch { }
+                Console.WriteLine("[Acai] Installation finished and update file removed.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Acai Error] Installation failed: {ex.Message}");
+                Console.WriteLine($"[Acai] The downloaded file is located at: {downloadedAssetPath}");
+            }
         }
 
         private static string GetTargetOsName()
@@ -128,6 +149,138 @@ namespace Acai.src
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) return "macos";
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return "linux";
             return "unknown";
+        }
+
+        private static string GetUserUpdateFolder()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                return Path.Combine(localAppData, "Acai", "update");
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                var home = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                return Path.Combine(home, "Library", "Application Support", "Acai", "update");
+            }
+
+            // Linux and others
+            var linuxHome = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+            return Path.Combine(linuxHome, ".local", "share", "Acai", "update");
+        }
+
+        private static void InstallDownloadedAsset(string assetPath, string osName)
+        {
+            if (osName == "windows")
+            {
+                // If it's an installer exe, run it and wait for completion
+                var start = new ProcessStartInfo
+                {
+                    FileName = assetPath,
+                    UseShellExecute = true,
+                };
+                var p = Process.Start(start);
+                p?.WaitForExit();
+                if (p != null && p.ExitCode != 0)
+                    throw new InvalidOperationException($"Installer exited with code {p.ExitCode}");
+                return;
+            }
+
+            if (osName == "macos")
+            {
+                if (assetPath.EndsWith(".pkg", StringComparison.OrdinalIgnoreCase))
+                {
+                    var start = new ProcessStartInfo
+                    {
+                        FileName = "installer",
+                        Arguments = $"-pkg \"{assetPath}\" -target /",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                    };
+                    var p = Process.Start(start);
+                    p?.WaitForExit();
+                    if (p != null && p.ExitCode != 0)
+                        throw new InvalidOperationException($"macOS installer exited with code {p.ExitCode}");
+                    return;
+                }
+                // otherwise just leave file for manual install
+                throw new InvalidOperationException("Unsupported macOS asset type for automatic install");
+            }
+
+            // linux
+            if (osName == "linux")
+            {
+                if (assetPath.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
+                {
+                    // extract to temp dir and attempt to replace running binary if found
+                    var tmp = Path.Combine(Path.GetTempPath(), "acai_update_extracted");
+                    if (Directory.Exists(tmp)) Directory.Delete(tmp, true);
+                    Directory.CreateDirectory(tmp);
+                    var start = new ProcessStartInfo
+                    {
+                        FileName = "tar",
+                        Arguments = $"-xzf \"{assetPath}\" -C \"{tmp}\"",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                    };
+                    var p = Process.Start(start);
+                    p?.WaitForExit();
+                    if (p != null && p.ExitCode != 0)
+                        throw new InvalidOperationException($"Failed to extract tarball (code {p.ExitCode})");
+
+                    // Find a candidate binary matching current process name
+                    string currentExe = Path.GetFileName(Environment.ProcessPath ?? "acai");
+                    var files = Directory.GetFiles(tmp, currentExe, SearchOption.AllDirectories);
+                    if (files.Length == 0) files = Directory.GetFiles(tmp, "*", SearchOption.AllDirectories);
+                    if (files.Length > 0)
+                    {
+                        var incoming = files[0];
+                        var current = Environment.ProcessPath ?? throw new InvalidOperationException("Cannot locate current executable path");
+                        DeployNewBinary(incoming, current, osName);
+                        // cleanup extracted
+                        try { Directory.Delete(tmp, true); } catch { }
+                        return;
+                    }
+                    throw new InvalidOperationException("No suitable binary found inside the tarball to replace the current executable.");
+                }
+
+                throw new InvalidOperationException("Unsupported Linux asset type for automatic install");
+            }
+
+            throw new InvalidOperationException("Unsupported OS for automatic installation");
+        }
+
+        private static string? FindVersionFile()
+        {
+            string dir = Directory.GetCurrentDirectory();
+            while (!string.IsNullOrEmpty(dir))
+            {
+                var candidate = Path.Combine(dir, "metadata", "VERSION");
+                if (File.Exists(candidate)) return candidate;
+                var parent = Directory.GetParent(dir);
+                if (parent == null) break;
+                dir = parent.FullName;
+            }
+            return null;
+        }
+
+        private static string ReadLocalVersion()
+        {
+            try
+            {
+                var vf = FindVersionFile();
+                if (vf != null)
+                {
+                    var txt = File.ReadAllText(vf).Trim();
+                    if (!string.IsNullOrEmpty(txt)) return txt;
+                }
+            }
+            catch { }
+            Console.WriteLine("[Acai] WARNING: metadata/VERSION not found. Using fallback version 0.0.0");
+            return "0.0.0";
         }
 
         private static async Task DownloadToPathAsync(HttpClient client, string url, string destinationPath)
@@ -214,6 +367,9 @@ del ""{batchScriptPath}""
     {
         [System.Text.Json.Serialization.JsonPropertyName("tag_name")]
         public string TagName { get; set; } = "";
+
+        [System.Text.Json.Serialization.JsonPropertyName("prerelease")]
+        public bool Prerelease { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("assets")]
         public System.Collections.Generic.List<GitHubAsset> Assets { get; set; } = new();

@@ -11,18 +11,17 @@ class UpdateCommand
         // FIX: Primary name first (no spaces/commas), then use .Aliases.Add for short flags
         var channelOption = new Option<string>("--channel")
         {
-            Description = "Specify the release channel: stable or beta.",
+            Description = "Specify the release channel: stable or beta. (required)",
             HelpName = "channel",
-            DefaultValueFactory = _ => "stable"
         };
-        channelOption.Aliases.Add("-c"); // Safely adds the short alias without whitespace errors
+        channelOption.Aliases.Add("-c");
         updateCommand.Options.Add(channelOption);
 
         updateCommand.SetAction(parseResult =>
         {
-            var channel = parseResult.GetValue(channelOption)?.ToLower() ?? "stable";
+            var channel = parseResult.GetValue(channelOption)?.ToLower();
 
-            if (channel != "stable" && channel != "beta")
+            if (string.IsNullOrWhiteSpace(channel) || (channel != "stable" && channel != "beta"))
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("❌ Error: Invalid channel. Choose 'stable' or 'beta'.");
@@ -34,9 +33,14 @@ class UpdateCommand
             Console.WriteLine($"🔄 [Acai Updater] Checking for updates on the '{channel}' channel...");
             Console.ResetColor();
 
-            Updater.Execute(channel);
+            // Map CLI channel to Updater channel token and call the async updater synchronously
+            // For channel updates perform a fresh installation using the ZeroCloud upgrader
+            var upgraderChannel = channel == "beta" ? "beta" : "stable";
+            Acai.src.AcaiZeroCloudUpgrader.RunAsync(upgraderChannel, true).GetAwaiter().GetResult();
         });
 
         return updateCommand;
     }
 }
+
+// The actual update implementation lives in src/Updater.cs as `Acai.src.Updater`.

@@ -3,11 +3,7 @@
 Use this page as a quick directory of the Acai documentation.
 
 ## Main sections
-- [Home](main.md)
-- [Getting Started](installing/installing.md)
-- [About Acai](about.md)
-- [Contents](contents.md)
-- [Bug Reports](bugs.md)
+ - [Updating Acai](installing/updating.md)
 
 ## Tutorial
 - [Introduction](tutorial/introduction.md)

@@ -1,0 +1,66 @@
+name: Build Acai Windows Installer
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Compile Acai Windows Binary
+      run: |
+        dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:PublishPdb=true -o ./dist/windows
+
+    - name: Structure Installer Files
+      shell: powershell
+      run: |
+        # 1. Create full clean system target directory structures inside a root folder
+        New-Item -ItemType Directory -Force -Path "./pkg-root/Acai/docs"
+        New-Item -ItemType Directory -Force -Path "./pkg-root/Acai/demo"
+        
+        # 2. Copy the generated main executable and debug PDB symbols
+        Copy-Item -Path "./dist/windows/Acai.exe" -Destination "./pkg-root/Acai/acai.exe" -Force
+        Copy-Item -Path "./dist/windows/Acai.pdb" -Destination "./pkg-root/Acai/Acai.pdb" -Force
+        
+        # 3. Copy top-level metadata files if they exist
+        if (Test-Path "README.md") { Copy-Item -Path "README.md" -Destination "./pkg-root/Acai/" -Force }
+        if (Test-Path "LICENSE")   { Copy-Item -Path "LICENSE" -Destination "./pkg-root/Acai/" -Force }
+        
+        # 4. Safely copy asset folders recursively if they exist and are not empty
+        if ((Test-Path "./docs") -and (Get-ChildItem "./docs")) { Copy-Item -Path "./docs/*" -Destination "./pkg-root/Acai/docs/" -Recurse -Force }
+        if ((Test-Path "./demo") -and (Get-ChildItem "./demo")) { Copy-Item -Path "./demo/*" -Destination "./pkg-root/Acai/demo/" -Recurse -Force }
+
+    - name: Determine Version Tag
+      id: get_version
+      shell: powershell
+      run: |
+        $TAG = "${{ github.event.release.tag_name }}"
+        if ([string]::IsNullOrEmpty($TAG)) { $TAG = "v0.1.0" }
+        echo "version=$TAG" >> $env:GITHUB_OUTPUT
+
+    - name: Create Windows Distribution Zip Archive
+      shell: powershell
+      run: |
+        # Package the structured folder layout into a clean zip format for WinGet and the upgrader
+        Compress-Archive -Path "./pkg-root/Acai" -DestinationPath "yourlang-${{ steps.get_version.outputs.version }}-windows-x64.zip" -Force
+
+    - name: Upload Windows Asset Archive to Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: yourlang-${{ steps.get_version.outputs.version }}-windows-x64.zip
+        tag_name: ${{ steps.get_version.outputs.version }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

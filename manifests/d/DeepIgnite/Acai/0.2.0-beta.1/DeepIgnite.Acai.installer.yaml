@@ -6,7 +6,7 @@ PackageVersion: 0.2.0-beta.1
 InstallerType: inno
 Installers:
 - Architecture: x64
-  InstallerUrl: https://github.com/acai-lang/acai-language/releases/download/v0.1.0/Acai-windows-x64.exe
+  InstallerUrl: https://github.com/acai-lang/acai-language/releases/download/v0.2.0-beta.1/Acai-windows-x64.exe
   InstallerSha256: 37D7B15E7790E5FDCE2CC1297206F8AB28D47FD443D081BFAA2EB3F710CA9F7D
 ManifestType: installer
 ManifestVersion: 1.12.0

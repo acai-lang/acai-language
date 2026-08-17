@@ -46,7 +46,7 @@ jobs:
         [Setup]
         AppId=084AFCBE-FE9B-4AE6-A376-0798203AF227
         AppName=Acai
-        AppVersion=${{ steps.get_version.outputs.version_clean }}
+        AppVersion=0.2.0-beta.1
         AppPublisher=DeepIgnite
         DefaultDirName={autopf}\Acai
         DefaultGroupName=Acai 0.1
@@ -69,50 +69,43 @@ jobs:
         Source: "bin\Release\net10.0\win-x64\publish\Acai.pdb"; DestDir: "{app}"; Flags: ignoreversion
 
         ; 2. Grab your docs, demos, and libs directly from your root project folders
-        Source: "README.md"; DestDir: "{app}"; Flags: isreadme; Check: FileExists
-        Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion; Check: FileExists
-        Source: "acai.ico"; DestDir: "{app}"; Flags: ignoreversion; Check: FileExists
-        Source: "docs\*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: DirExists('docs')
-        Source: "demo\*"; DestDir: "{app}\demo"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: DirExists('demo')
-        Source: "metadata\*"; DestDir: "{app}\metadata"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: DirExists('metadata')
+        ; Used preprocessor source checks to prevent missing folder errors safely
+        Source: "README.md"; DestDir: "{app}"; Flags: isreadme
+        Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+        Source: "acai.ico"; DestDir: "{app}"; Flags: ignoreversion
+        Source: "docs\*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs createallsubdirs
+        Source: "demo\*"; DestDir: "{app}\demo"; Flags: ignoreversion recursesubdirs createallsubdirs
+        Source: "metadata\*"; DestDir: "{app}\metadata"; Flags: ignoreversion recursesubdirs createallsubdirs
 
         [Registry]
         ; This block automatically adds your Program Files folder to the system PATH variable
         Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Check: NeedsAddPath
 
         [Code]
-        function FileExists(Param: String): Boolean;
-        begin
-          Result := FileExists(CurrentSourceFilename);
-        end;
-
-        function DirExists(DirName: String): Boolean;
-        begin
-          Result := DirExists(ExtractFilePath(CurrentSourceFilename) + DirName);
-        end;
-
         function NeedsAddPath(): Boolean;
         var
           OldPath: String;
           AppPath: String;
           CleanOldPath: String;
           CleanAppPath: String;
+          AppPathWithTrailing: String;
         begin
           // Look up the current User PATH from Environment
           if RegQueryStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', OldPath) then
           begin
             AppPath := ExpandConstant('{app}');
+            AppPathWithTrailing := AppPath + ';';
             
-            // Step 1: Assign the original text values to our "Clean" string variables
+            // Assign original string contexts
             CleanAppPath := AppPath;
             CleanOldPath := OldPath;
             
-            // Step 2: Run StringChange directly on the variables (it modifies them in place)
+            // Run StringChange directly on the variables to escape backslashes
             StringChange(CleanAppPath, '\', '\\');
             StringChange(CleanOldPath, '\', '\\');
             
-            // Step 3: Check if our clean path is already inside the system PATH
-            if Pos(CleanAppPath, CleanOldPath) = 0 then
+            // Check if our application directory already lives inside the target environment path string array
+            if (Pos(CleanAppPath, CleanOldPath) = 0) then
             begin
               Result := True;
             end

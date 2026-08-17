@@ -1,16 +1,16 @@
-\# 🍇 Acai Programming Language
+# 🍇 Acai Programming Language
 
 
 
-\*\*Acai\*\* is a lightweight, human-friendly hybrid programming language with easy and different syntax styles.
+**Acai** is a lightweight, human-friendly hybrid programming language with easy and different syntax styles.
 
 
 
-\---
+---
 
 
 
-\## 🎨 Dual-Syntax Freedom (Human-Friendly)
+## 🎨 Dual-Syntax Freedom (Human-Friendly)
 
 
 
@@ -34,11 +34,11 @@ set name = "XYZ"
 
 
 
-\---
+---
 
 
 
-\## 🚀 Basic Terminal Usage
+## 🚀 Basic Terminal Usage
 
 
 

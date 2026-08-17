@@ -1,4 +1,4 @@
-name: Build Acai Windows Installer
+name: Build Acai windows Installer
 
 on:
   release:
@@ -22,45 +22,124 @@ jobs:
 
     - name: Compile Acai Windows Binary
       run: |
-        dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:PublishPdb=true -o ./dist/windows
-
-    - name: Structure Installer Files
-      shell: powershell
-      run: |
-        # 1. Create full clean system target directory structures inside a root folder
-        New-Item -ItemType Directory -Force -Path "./pkg-root/Acai/docs"
-        New-Item -ItemType Directory -Force -Path "./pkg-root/Acai/demo"
-        
-        # 2. Copy the generated main executable and debug PDB symbols
-        Copy-Item -Path "./dist/windows/Acai.exe" -Destination "./pkg-root/Acai/acai.exe" -Force
-        Copy-Item -Path "./dist/windows/Acai.pdb" -Destination "./pkg-root/Acai/Acai.pdb" -Force
-        
-        # 3. Copy top-level metadata files if they exist
-        if (Test-Path "README.md") { Copy-Item -Path "README.md" -Destination "./pkg-root/Acai/" -Force }
-        if (Test-Path "LICENSE")   { Copy-Item -Path "LICENSE" -Destination "./pkg-root/Acai/" -Force }
-        
-        # 4. Safely copy asset folders recursively if they exist and are not empty
-        if ((Test-Path "./docs") -and (Get-ChildItem "./docs")) { Copy-Item -Path "./docs/*" -Destination "./pkg-root/Acai/docs/" -Recurse -Force }
-        if ((Test-Path "./demo") -and (Get-ChildItem "./demo")) { Copy-Item -Path "./demo/*" -Destination "./pkg-root/Acai/demo/" -Recurse -Force }
+        dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:CopyOutputSymbolsToPublishDirectory=true -o ./bin/Release/net10.0/win-x64/publish
 
     - name: Determine Version Tag
       id: get_version
       shell: powershell
       run: |
+        # Fallback dynamically to v0.2.0-beta.1 if run manually via workflow_dispatch
         $TAG = "${{ github.event.release.tag_name }}"
-        if ([string]::IsNullOrEmpty($TAG)) { $TAG = "v0.1.0" }
-        echo "version=$TAG" >> $env:GITHUB_OUTPUT
+        if ([string]::IsNullOrEmpty($TAG)) { $TAG = "v0.2.0-beta.1" }
+        
+        # Clean up the string by removing any leading 'v' for the Inno Setup AppVersion directive
+        $CLEAN_TAG = $TAG -replace '^v', ''
+        
+        echo "version_raw=$TAG" >> $env:GITHUB_OUTPUT
+        echo "version_clean=$CLEAN_TAG" >> $env:GITHUB_OUTPUT
 
-    - name: Create Windows Distribution Zip Archive
+    - name: Generate Inno Setup Script
       shell: powershell
       run: |
-        # Package the structured folder layout into a clean zip format for WinGet and the upgrader
-        Compress-Archive -Path "./pkg-root/Acai" -DestinationPath "yourlang-${{ steps.get_version.outputs.version }}-windows-x64.zip" -Force
+        # Creates your specific .iss file dynamically with the correct runtime version embedded
+        $issContent = @"
+        [Setup]
+        AppId=084AFCBE-FE9B-4AE6-A376-0798203AF227
+        AppName=Acai
+        AppVersion=${{ steps.get_version.outputs.version_clean }}
+        AppPublisher=DeepIgnite
+        DefaultDirName={autopf}\Acai
+        DefaultGroupName=Acai 0.1
+        OutputBaseFilename=Acai-windows-x64
+        Compression=lzma
+        SolidCompression=yes
+        ChangesEnvironment=yes
+        LicenseFile="LICENSE"
 
-    - name: Upload Windows Asset Archive to Release
+        ArchitecturesInstallIn64BitMode=x64compatible
+        SetupIconFile=acai.ico
+        UninstallDisplayIcon={app}\acai.ico
+        UninstallDisplayName=Acai
+        UninstallIconFile=acai.ico
+        AppCopyright=Copyright © 2026 DeepIgnite
+
+        [Files]
+        ; 1. Grab the executable directly from your .NET build output folder
+        Source: "bin\Release\net10.0\win-x64\publish\Acai.exe"; DestDir: "{app}"; Flags: ignoreversion
+        Source: "bin\Release\net10.0\win-x64\publish\Acai.pdb"; DestDir: "{app}"; Flags: ignoreversion
+
+        ; 2. Grab your docs, demos, and libs directly from your root project folders
+        Source: "README.md"; DestDir: "{app}"; Flags: isreadme; Check: FileExists
+        Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion; Check: FileExists
+        Source: "acai.ico"; DestDir: "{app}"; Flags: ignoreversion; Check: FileExists
+        Source: "docs\*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: DirExists('docs')
+        Source: "demo\*"; DestDir: "{app}\demo"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: DirExists('demo')
+        Source: "metadata\*"; DestDir: "{app}\metadata"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: DirExists('metadata')
+
+        [Registry]
+        ; This block automatically adds your Program Files folder to the system PATH variable
+        Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Check: NeedsAddPath
+
+        [Code]
+        function FileExists(Param: String): Boolean;
+        begin
+          Result := FileExists(CurrentSourceFilename);
+        end;
+
+        function DirExists(DirName: String): Boolean;
+        begin
+          Result := DirExists(ExtractFilePath(CurrentSourceFilename) + DirName);
+        end;
+
+        function NeedsAddPath(): Boolean;
+        var
+          OldPath: String;
+          AppPath: String;
+          CleanOldPath: String;
+          CleanAppPath: String;
+        begin
+          // Look up the current User PATH from Environment
+          if RegQueryStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', OldPath) then
+          begin
+            AppPath := ExpandConstant('{app}');
+            
+            // Step 1: Assign the original text values to our "Clean" string variables
+            CleanAppPath := AppPath;
+            CleanOldPath := OldPath;
+            
+            // Step 2: Run StringChange directly on the variables (it modifies them in place)
+            StringChange(CleanAppPath, '\', '\\');
+            StringChange(CleanOldPath, '\', '\\');
+            
+            // Step 3: Check if our clean path is already inside the system PATH
+            if Pos(CleanAppPath, CleanOldPath) = 0 then
+            begin
+              Result := True;
+            end
+            else
+            begin
+              Result := False;
+            end;
+          end
+          else
+          begin
+            // If the PATH variable doesn't exist at all, we definitely need to create it
+            Result := True;
+          end;
+        end;
+        "@
+        Set-Content -Path "installer.iss" -Value $issContent
+
+    - name: Compile Standalone Executable Setup Wizard
+      shell: powershell
+      run: |
+        # Invokes the built-in Inno Setup compiler tool inside the windows-latest runner
+        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
+
+    - name: Upload Windows Installer Executable to Release
       uses: softprops/action-gh-release@v2
       with:
-        files: yourlang-${{ steps.get_version.outputs.version }}-windows-x64.zip
-        tag_name: ${{ steps.get_version.outputs.version }}
+        files: Output/Acai-windows-x64.exe
+        tag_name: ${{ steps.get_version.outputs.version_raw }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

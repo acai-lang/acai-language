@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>acai</id>
+    <version>0.1.0</version>
+    <title>Acai</title>
+    <authors>DeepIgnite</authors>
+    <owners>DeepIgnite</owners>
+    <license type="expression">MIT</license>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Acai is a lightweight and fast programming language for building applications without any coding experience.</description>
+    <releaseNotes>Initial release of Acai.</releaseNotes>
+    <copyright>Copyright © 2026 DeepIgnite</copyright>
+    <tags>acai programming language lightweight fast human-friendly</tags>
+  </metadata>
+</package>

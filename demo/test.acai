@@ -1,0 +1,6 @@
+set name = call input("Name:")
+set age to call input("Age:")
+set isAdult to call input("Is Adult:")
+
+
+show "Name: {name} Age: {age} Adult: {isAdult}"
